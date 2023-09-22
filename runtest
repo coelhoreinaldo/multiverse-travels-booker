@@ -1,0 +1,173 @@
+#!/usr/bin/env crystal
+
+require "http/client"
+require "json"
+
+STDIO = {input: Process::Redirect::Inherit, output: Process::Redirect::Inherit, error: Process::Redirect::Inherit}
+
+class AssertionError < Exception
+  getter reason : String
+
+  def initialize(@reason); end
+end
+
+macro test(test_case, &test_block)
+  begin
+    {{test_block.body}}
+  rescue error : AssertionError
+    puts "Failed when testing {{test_case.id}}:\n#{error.reason}\n"
+    abort
+  end
+end
+
+macro assert(assertion, message)
+  raise AssertionError.new({{message}}) unless {{assertion}}
+end
+
+puts "If docker compose is already up, it is recommended that you run this test again
+later with it down to test if your API will respond before a timeout during the
+automated tests.\n\n"
+
+if !Process.find_executable("docker-compose").nil?
+  abort unless Process.run("docker-compose", ["-f", "docker-compose.yml", "up", "-d"], **STDIO).success?
+  at_exit { Process.run("docker-compose", ["down"], **STDIO) }
+elsif !Process.find_executable("docker").nil?
+  abort unless Process.run("docker", ["compose", "-f", "docker-compose.yml", "up", "-d"], **STDIO).success?
+  at_exit { Process.run("docker", ["compose", "down"], **STDIO) }
+else
+  abort("It seems that docker compose is not installed.")
+end
+
+HEADERS = HTTP::Headers{"Content-Type" => "application/json"}
+client = HTTP::Client.new("localhost", port: 3000)
+
+def parse_body(response : HTTP::Client::Response)
+  JSON.parse(response.body)
+rescue JSON::ParseException
+  raise AssertionError.new("Response body should contain valid json.")
+end
+
+puts "\nPolling API on port 3000 with a GET at /travel_plans."
+
+try = 0
+loop do
+  abort("Couldn't connect to API on port 3000.") if try == 120
+  try += 1
+  sleep(1)
+  break if client.get("/travel_plans").success?
+rescue IO::Error
+end
+
+puts "Successfully reached API."
+
+test "if the database is empty" do
+  response = client.get("/travel_plans")
+  assert response.success?, "Server should respond with a success status code."
+  assert parse_body(response) == JSON.parse("[]"),
+    "Since the test script expects to be executed with an empty database, server should respond with an empty array initially."
+end
+
+test "the insertion and removal of travel plans" do
+  response = client.post("/travel_plans", HEADERS, %({"travel_stops": [1,2,3,7]}))
+  assert response.success?, "Server should respond with a success status code."
+  data = parse_body(response)
+  assert !data["id"].as_i?.nil?, "Response body should contain an 'id' field with an integer value."
+  assert data["travel_stops"] == JSON.parse("[1,2,3,7]"),
+    "Response's 'travel_stops' field should be equal to the one on the request."
+
+  response = client.get("/travel_plans/#{data["id"].as_i}")
+  assert parse_body(response) == JSON.parse(%({"id": #{data["id"].as_i}, "travel_stops": [1,2,3,7]})), <<-EOS
+  For a given GET request with the inserted id and no params, the server give a response with the form
+    { "id": int, "travel_stops": [int...] }
+  containig the inserted data.
+  EOS
+
+  assert client.delete("/travel_plans/#{data["id"].as_i}").success?, "User should be able to remove a previously inserted travel plan."
+  assert parse_body(client.get("/travel_plans")) == JSON.parse("[]"),
+    "Once removed, a travel plan shouldn't appear in responses anymore."
+end
+
+test "the update of existing travel plans" do
+  response = client.post("/travel_plans", HEADERS, %({"travel_stops": [1,2]}))
+  data = parse_body(response)
+  expected_response = JSON.parse(%({"id": #{data["id"].as_i}, "travel_stops": [3,4]}))
+
+  response = client.put("/travel_plans/#{data["id"].as_i}", HEADERS, %({"travel_stops": [3,4]}))
+  assert parse_body(response) == expected_response,
+    "The response to the update request should be the travel plan with its 'id' and the new 'travel_stops' array."
+
+  assert parse_body(client.get("/travel_plans/#{data["id"].as_i}")) == expected_response,
+    "After the update, querying for the travel plan by its id should return the updated value."
+
+  client.delete("/travel_plans/#{data["id"].as_i}")
+end
+
+test "the retrieval of multiple travel plans at once" do
+  id_1 = parse_body(client.post("/travel_plans", HEADERS, %({"travel_stops": [1,2]})))["id"].as_i
+  id_2 = parse_body(client.post("/travel_plans", HEADERS, %({"travel_stops": [3,4]})))["id"].as_i
+  id_3 = parse_body(client.post("/travel_plans", HEADERS, %({"travel_stops": [5,6]})))["id"].as_i
+
+  assert parse_body(client.get("/travel_plans")) == JSON.parse(%([
+    {"id": #{id_1}, "travel_stops": [1,2]},
+    {"id": #{id_2}, "travel_stops": [3,4]},
+    {"id": #{id_3}, "travel_stops": [5,6]}
+  ])), "A GET request without specific id should return an array of all the inserted travel plans"
+
+  client.delete("/travel_plans/#{id_1}")
+  client.delete("/travel_plans/#{id_2}")
+  client.delete("/travel_plans/#{id_3}")
+end
+
+test "the expansion of travel stops with the 'expand' parameter" do
+  id_1 = parse_body(client.post("/travel_plans", HEADERS, %({"travel_stops": [1,2]})))["id"].as_i
+  id_2 = parse_body(client.post("/travel_plans", HEADERS, %({"travel_stops": [3,4]})))["id"].as_i
+
+  assert parse_body(client.get("/travel_plans/#{id_1}?expand=true")) == JSON.parse(%(
+    {"id":#{id_1},"travel_stops":[{"id":1,"name":"Earth (C-137)","type":"Planet","dimension":"Dimension C-137"},{"id":2,"name":"Abadango","type":"Cluster","dimension":"unknown"}]}
+  )), "When an ID is specified, the API should return a correctly expanded travel plan."
+
+  assert parse_body(client.get("/travel_plans?expand=true")) == JSON.parse(%([
+    {"id":#{id_1},"travel_stops":[{"id":1,"name":"Earth (C-137)","type":"Planet","dimension":"Dimension C-137"},{"id":2,"name":"Abadango","type":"Cluster","dimension":"unknown"}]},
+    {"id":#{id_2},"travel_stops":[{"id":3,"name":"Citadel of Ricks","type":"Space station","dimension":"unknown"},{"id":4,"name":"Worldender's lair","type":"Planet","dimension":"unknown"}]}
+  ])), "When an ID is not specified, the API should correctly expand all travel plans."
+
+  client.delete("/travel_plans/#{id_1}")
+  client.delete("/travel_plans/#{id_2}")
+end
+
+test "the optimization of travel plans with the 'optimize' parameter" do
+  id_1 = parse_body(client.post("/travel_plans", HEADERS, %({"travel_stops": [2,7,9,11,19]})))["id"].as_i
+  id_2 = parse_body(client.post("/travel_plans", HEADERS, %({"travel_stops": [2,3,7]})))["id"].as_i
+
+  assert parse_body(client.get("/travel_plans/#{id_1}?optimize=true")) == JSON.parse(%({
+    "id": #{id_1},
+    "travel_stops":[19,9,2,11,7]
+  })), "When an ID is specified, the API should return a correctly optimized travel plan."
+
+  assert parse_body(client.get("/travel_plans?optimize=true")) == JSON.parse(%([
+    {"id": #{id_1}, "travel_stops":[19,9,2,11,7]},
+    {"id": #{id_2}, "travel_stops":[2,7,3]}
+  ])), "When an ID is not specified, the API should correctly optimize all travel plans."
+
+  client.delete("/travel_plans/#{id_1}")
+  client.delete("/travel_plans/#{id_2}")
+end
+
+test "that 'optimize' and 'expand' parameters can be used together" do
+  id_1 = parse_body(client.post("/travel_plans", HEADERS, %({"travel_stops": [2,11,19]})))["id"].as_i
+  id_2 = parse_body(client.post("/travel_plans", HEADERS, %({"travel_stops": [2,3,7]})))["id"].as_i
+
+  assert parse_body(client.get("/travel_plans/#{id_1}?optimize=true&expand=true")) == JSON.parse(%(
+    {"id":#{id_1},"travel_stops":[{"id":19,"name":"Gromflom Prime","type":"Planet","dimension":"Replacement Dimension"},{"id":2,"name":"Abadango","type":"Cluster","dimension":"unknown"},{"id":11,"name":"Bepis 9","type":"Planet","dimension":"unknown"}]}
+  )), "When an ID is specified, the API should return a correctly expanded and optimized travel plan."
+
+  assert parse_body(client.get("/travel_plans?optimize=true&expand=true")) == JSON.parse(%([
+    {"id":#{id_1},"travel_stops":[{"id":19,"name":"Gromflom Prime","type":"Planet","dimension":"Replacement Dimension"},{"id":2,"name":"Abadango","type":"Cluster","dimension":"unknown"},{"id":11,"name":"Bepis 9","type":"Planet","dimension":"unknown"}]},
+    {"id":#{id_2},"travel_stops":[{"id":2,"name":"Abadango","type":"Cluster","dimension":"unknown"},{"id":7,"name":"Immortality Field Resort","type":"Resort","dimension":"unknown"},{"id":3,"name":"Citadel of Ricks","type":"Space station","dimension":"unknown"}]}
+  ])), "When an ID is not specified, the API should correctly expand and optimize all travel plans."
+
+  client.delete("/travel_plans/#{id_1}")
+  client.delete("/travel_plans/#{id_2}")
+end
+
+puts "All tests executed successfully!\n\n"
