@@ -1,0 +1,28 @@
+name: app
+version: 0.1.0
+
+authors:
+  - coelhoreinaldo <scoelhor7@gmail.com>
+
+targets:
+  app:
+    main: src/app.cr
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+
+  mysql:
+    github: crystal-lang/crystal-mysql
+
+  jennifer:
+    github: imdrasil/jennifer.cr
+    version: '~> 0.13.0'
+
+  sam:
+    github: imdrasil/sam.cr
+    version: 0.5.0
+
+crystal: 1.9.2
+
+license: MIT
