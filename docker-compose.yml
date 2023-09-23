@@ -17,8 +17,6 @@ services:
     ports:
       - "3306:3306"
     environment:
-      - MY
       - MYSQL_ROOT_PASSWORD=password
+    command: mysqld --default-authentication-plugin=mysql_native_password
     restart: always
-    # volumes:
-    #   - ./:/docker-entrypoint-initdb.d

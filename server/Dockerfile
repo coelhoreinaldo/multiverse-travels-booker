@@ -3,7 +3,7 @@ FROM crystallang/crystal:1.9.2-alpine
 WORKDIR /app-server
 
 COPY shard.yml shard.lock ./
-COPY src ./src
+COPY . .
 
 RUN shards install
 RUN crystal build --release src/app.cr -o /app-server/app
