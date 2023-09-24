@@ -1,25 +1,9 @@
 require "kemal"
 require "../config/config"
+require "json"
 
 module App
   VERSION = "0.1.0"
-  # get "/travel_plans" do
-  #   person = {first_name: "Reinaldo", last_name: "Coelho"}
-  #   person.to_json
-  # end
-
-  # post "/travel_plans/:id" do |context|
-  #   id = context.params.url["id"]?
-  #   first_name = context.params.body["first_name"]?
-  #   last_name = context.params.body["last_name"]?
-
-  #   if !first_name
-  #     error = {message: "first_name was not provided"}.to_json
-  #     halt context, status_code: 403, response: error
-  #   end
-  #   {person: "Person with name #{first_name} #{last_name} and id #{id}"}.to_json
-  # end
-
   get "/locations" do
     locations = Location.all
     locations.to_json
@@ -30,6 +14,31 @@ module App
     type = context.params.body["type"]?
     dimension = context.params.body["dimension"]?
     Location.create({name: name, type: type, dimension: dimension})
+  end
+
+  post "/travel_plans" do |env|
+    env.response.content_type = "application/json"
+    travel_plan = env.params.json
+
+    if !travel_plan
+      error = {message: "travel_stops was not provided"}.to_json
+      halt env, status_code: 403, response: error
+    end
+    stringified_array = travel_plan["travel_stops"].to_s
+
+    created_travel_plan = TravelPlan.create({travel_stops: stringified_array})
+
+    response = {
+      travel_stops: Array(Int64).from_json(stringified_array),
+      id:           created_travel_plan.id,
+    }
+    response.to_json
+  end
+
+  get "/travel_plans" do |env|
+    env.response.content_type = "application/json"
+    travel_plans = TravelPlan.all
+    travel_plans.to_json
   end
 end
 
