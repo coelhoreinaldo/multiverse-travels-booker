@@ -4,18 +4,6 @@ require "json"
 
 module App
   VERSION = "0.1.0"
-  get "/locations" do
-    locations = Location.all
-    locations.to_json
-  end
-
-  post "/locations" do |context|
-    name = context.params.body["name"]?
-    type = context.params.body["type"]?
-    dimension = context.params.body["dimension"]?
-    Location.create({name: name, type: type, dimension: dimension})
-  end
-
   post "/travel_plans" do |env|
     env.response.content_type = "application/json"
     travel_plan = env.params.json
@@ -28,17 +16,24 @@ module App
 
     created_travel_plan = TravelPlan.create({travel_stops: stringified_array})
 
-    response = {
+    created_travel_response = {
       travel_stops: Array(Int64).from_json(stringified_array),
       id:           created_travel_plan.id,
     }
-    response.to_json
+    env.response.status_code = 201
+    created_travel_response.to_json
   end
 
   get "/travel_plans" do |env|
     env.response.content_type = "application/json"
     travel_plans = TravelPlan.all
-    travel_plans.to_json
+    travel_plans_arr = Array(NamedTuple(id: Int32, travel_stops: String)).from_json(travel_plans.to_json)
+    travel_plans_response = travel_plans_arr.map do |t|
+      t_travel_stops = Array(Int64).from_json(t["travel_stops"])
+      {"id" => t["id"], "travel_stops" => t_travel_stops}
+    end
+    env.response.status_code = 200
+    travel_plans_response.to_json
   end
 end
 
