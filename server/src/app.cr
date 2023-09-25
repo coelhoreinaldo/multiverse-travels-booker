@@ -101,6 +101,21 @@ module App
     env.response.status_code = 200
     updated_travel_response.to_json
   end
+
+  delete "/travel_plans/:id" do |env|
+    env.response.content_type = "application/json"
+    id = env.params.url["id"].to_i
+    travel_plan = TravelPlan.find(id)
+
+    if !travel_plan
+      error = {message: "travel_plan with id #{id} not found"}.to_json
+      halt env, status_code: 404, response: error
+    end
+
+    travel_plan.delete
+
+    env.response.status_code = 204
+  end
 end
 
 Kemal.run
