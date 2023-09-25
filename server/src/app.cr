@@ -9,9 +9,10 @@ module App
   post "/travel_plans" do |env|
     env.response.content_type = "application/json"
     travel_stops = env.params.json["travel_stops"].as(Array)
+
     if travel_stops.size == 0
       error = {message: "travel_stops was not provided"}.to_json
-      halt env, status_code: 403, response: error
+      halt env, status_code: 400, response: error
     end
 
     stringified_array = travel_stops.to_s
@@ -70,6 +71,35 @@ module App
 
     env.response.status_code = 200
     formatted_response.to_json
+  end
+
+  put "/travel_plans/:id" do |env|
+    env.response.content_type = "application/json"
+    id = env.params.url["id"].to_i
+    travel_stops = env.params.json["travel_stops"].as(Array)
+
+    if travel_stops.size == 0
+      error = {message: "travel_stops was not provided"}.to_json
+      halt env, status_code: 400, response: error
+    end
+
+    travel_exists = TravelPlan.find(id)
+
+    if !travel_exists
+      error = {message: "travel_plan with id #{id} not found"}.to_json
+      halt env, status_code: 404, response: error
+    end
+
+    stringified_array = travel_stops.to_s
+
+    updated_travel_plan = TravelPlan.where { _id == id }.update(travel_stops: stringified_array)
+
+    updated_travel_response = {
+      id:           id,
+      travel_stops: Array(Int64).from_json(stringified_array),
+    }
+    env.response.status_code = 200
+    updated_travel_response.to_json
   end
 end
 
