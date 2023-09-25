@@ -8,14 +8,13 @@ module App
 
   post "/travel_plans" do |env|
     env.response.content_type = "application/json"
-    travel_plan = env.params.json
-
-    if !travel_plan
+    travel_stops = env.params.json["travel_stops"].as(Array)
+    if travel_stops.size == 0
       error = {message: "travel_stops was not provided"}.to_json
       halt env, status_code: 403, response: error
     end
 
-    stringified_array = travel_plan["travel_stops"].to_s
+    stringified_array = travel_stops.to_s
 
     created_travel_plan = TravelPlan.create({travel_stops: stringified_array})
 
