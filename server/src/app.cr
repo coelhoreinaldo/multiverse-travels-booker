@@ -1,6 +1,7 @@
 require "kemal"
 require "../config/config"
 require "json"
+require "./utils/travel_stops"
 
 module App
   VERSION = "0.1.0"
@@ -17,8 +18,8 @@ module App
     created_travel_plan = TravelPlan.create({travel_stops: stringified_array})
 
     created_travel_response = {
-      travel_stops: Array(Int64).from_json(stringified_array),
       id:           created_travel_plan.id,
+      travel_stops: Array(Int64).from_json(stringified_array),
     }
     env.response.status_code = 201
     created_travel_response.to_json
@@ -26,12 +27,20 @@ module App
 
   get "/travel_plans" do |env|
     env.response.content_type = "application/json"
+    expand = env.params.query["expand"]?
     travel_plans = TravelPlan.all
     travel_plans_arr = Array(NamedTuple(id: Int32, travel_stops: String)).from_json(travel_plans.to_json)
     travel_plans_response = travel_plans_arr.map do |t|
-      t_travel_stops = Array(Int64).from_json(t["travel_stops"])
+      parsed_travel_stops = Array(Int64).from_json(t["travel_stops"])
+      t_travel_stops = parsed_travel_stops
+
+      if expand == "true"
+        t_travel_stops = get_all_travel_stops(parsed_travel_stops)
+      end
+
       {"id" => t["id"], "travel_stops" => t_travel_stops}
     end
+
     env.response.status_code = 200
     travel_plans_response.to_json
   end
