@@ -40,6 +40,10 @@ shards:
     git: https://github.com/imdrasil/sam.cr.git
     version: 0.5.0
 
+  spec-kemal:
+    git: https://github.com/kemalcr/spec-kemal.git
+    version: 1.0.0
+
   wordsmith:
     git: https://github.com/luckyframework/wordsmith.git
     version: 0.4.0

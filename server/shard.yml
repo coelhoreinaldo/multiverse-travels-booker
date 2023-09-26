@@ -12,6 +12,9 @@ dependencies:
   kemal:
     github: kemalcr/kemal
 
+  spec-kemal:
+    github: kemalcr/spec-kemal
+
   mysql:
     github: crystal-lang/crystal-mysql
 
