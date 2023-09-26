@@ -38,7 +38,7 @@ module App
       t_travel_stops = parsed_travel_stops
 
       if expand == "true"
-        t_travel_stops = get_all_travel_stops(parsed_travel_stops)
+        t_travel_stops = get_travel_stops(parsed_travel_stops)
       end
 
       {"id" => t["id"], "travel_stops" => t_travel_stops}
@@ -63,7 +63,7 @@ module App
     formatted_response = {
       "id"           => parsed_response["id"],
       "travel_stops" => if expand == "true"
-        get_all_travel_stops(Array(Int64).from_json(parsed_response["travel_stops"]))
+        get_travel_stops(Array(Int64).from_json(parsed_response["travel_stops"]))
       else
         Array(Int64).from_json(parsed_response["travel_stops"])
       end,

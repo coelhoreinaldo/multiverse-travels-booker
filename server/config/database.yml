@@ -1,5 +1,4 @@
 default: &default
-  host: localhost
   user: root
   password: password
   adapter: mysql
