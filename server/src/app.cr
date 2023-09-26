@@ -30,6 +30,8 @@ module App
   get "/travel_plans" do |env|
     env.response.content_type = "application/json"
     expand = env.params.query["expand"]?
+    optimize = env.params.query["optimize"]?
+
     travel_plans = TravelPlan.all
 
     parsed_response = Array(NamedTuple(id: Int32, travel_stops: String)).from_json(travel_plans.to_json)
@@ -37,9 +39,7 @@ module App
       parsed_travel_stops = Array(Int64).from_json(t["travel_stops"])
       t_travel_stops = parsed_travel_stops
 
-      if expand == "true"
-        t_travel_stops = get_travel_stops(parsed_travel_stops)
-      end
+      t_travel_stops = get_travel_stops(parsed_travel_stops, expand, optimize)
 
       {"id" => t["id"], "travel_stops" => t_travel_stops}
     end
@@ -52,6 +52,8 @@ module App
     env.response.content_type = "application/json"
     id = env.params.url["id"].to_i
     expand = env.params.query["expand"]?
+    optimize = env.params.query["optimize"]?
+
     travel_plan = TravelPlan.find(id)
 
     if !travel_plan
@@ -62,11 +64,7 @@ module App
     parsed_response = NamedTuple(id: Int32, travel_stops: String).from_json(travel_plan.to_json)
     formatted_response = {
       "id"           => parsed_response["id"],
-      "travel_stops" => if expand == "true"
-        get_travel_stops(Array(Int64).from_json(parsed_response["travel_stops"]))
-      else
-        Array(Int64).from_json(parsed_response["travel_stops"])
-      end,
+      "travel_stops" => get_travel_stops(Array(Int64).from_json(parsed_response["travel_stops"]), expand, optimize),
     }
 
     env.response.status_code = 200
