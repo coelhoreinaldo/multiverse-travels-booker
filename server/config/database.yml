@@ -12,7 +12,8 @@ development:
 
 test:
   <<: *default
-  db: app_db
+  db: app_db_test
+  host: db
 
 production:
   <<: *default

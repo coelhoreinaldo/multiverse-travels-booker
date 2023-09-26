@@ -3,6 +3,8 @@ require "../config/config"
 require "json"
 require "./utils/travel_stops"
 
+Kemal.config.port = ENV["PORT"].to_i || 3000
+
 module App
   VERSION = "0.1.0"
 
