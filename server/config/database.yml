@@ -1,4 +1,4 @@
-default: &default # host: db
+default: &default
   user: root
   password: password
   adapter: mysql
@@ -8,6 +8,7 @@ default: &default # host: db
 development:
   <<: *default
   db: app_db
+  host: db
 
 test:
   <<: *default
