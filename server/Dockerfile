@@ -9,4 +9,4 @@ COPY . .
 RUN crystal build --release src/app.cr -o /app-server/app
 
 EXPOSE 3000
-CMD ["/app-server/app" ]
+CMD make sam db:setup && /app-server/app

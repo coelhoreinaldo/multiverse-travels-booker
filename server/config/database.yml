@@ -1,4 +1,5 @@
-default: &default #host: db
+default: &default
+  host: db
   user: root
   password: password
   adapter: mysql

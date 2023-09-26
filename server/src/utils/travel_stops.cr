@@ -32,14 +32,18 @@ def get_travel_stops(travel_stops, expand = false, optimize = false)
   if api_response.status == HTTP::Status::OK
     parsed_data = JSON.parse(api_response.body)["data"]["locationsByIds"]
     travel_stops = Array(NamedTuple(id: String, name: String, dimension: String, type: String, residents: Array(NamedTuple(episode: Array(NamedTuple(characters: Array(Hash(String, String)))))))).from_json(parsed_data.to_json)
+
     sorted_by_popularity = travel_stops.sort_by { |stop| stop["residents"].map { |resident| resident["episode"].map { |episode| episode["characters"].size }.sum }.sum }
+
     if optimize == "true" && expand == "true"
       sorted_by_dimension = sorted_by_popularity.sort_by { |stop| stop["dimension"] }
       return sorted_by_dimension.map { |stop| {id: stop["id"].to_i, name: stop["name"], dimension: stop["dimension"], type: stop["type"]} }
     end
+
     if expand == "true"
       return travel_stops.map { |stop| {id: stop["id"].to_i, name: stop["name"], dimension: stop["dimension"], type: stop["type"]} }
     end
+
     if optimize == "true"
       sorted_by_dimension = sorted_by_popularity.sort_by { |stop| stop["dimension"] }
       return sorted_by_dimension.map { |stop| stop["id"].to_i }
@@ -49,7 +53,3 @@ def get_travel_stops(travel_stops, expand = false, optimize = false)
     return nil
   end
 end
-
-# puts(get_travel_stops([2, 7, 9, 11, 19], true, true)) # saída esperada: [19, 9, 2, 11, 7]
-# puts(get_travel_stops([2, 3, 7])) #  saída esperada: [2, 7, 3]
-# puts(get_travel_stops([2, 11, 19])) # saída esperada: [19, 2, 11]

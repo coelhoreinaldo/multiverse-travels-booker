@@ -1,16 +1,21 @@
 version: '3'
 
 services:
-  # server:
-  #   container_name: app_server
-  #   build: ./server
-  #   ports:
-  #     - "3000:3000"
-  #   working_dir: /app-server
-  #   volumes:
-  #     - ./server/src:/app-server/src
-  #   depends_on:
-  #     - db
+  server:
+    container_name: app_server
+    build: ./server
+    ports:
+      - "3000:3000"
+    working_dir: /app-server
+    volumes:
+      - ./server/src:/app-server/src
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "lsof", "-t", "-i:3000" ]
+      timeout: 10s
+      retries: 5
   db:
     container_name: app_db
     image: mysql:8.0.32
@@ -20,3 +25,7 @@ services:
       - MYSQL_ROOT_PASSWORD=password
     command: mysqld --default-authentication-plugin=mysql_native_password
     restart: always
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 10s
+      retries: 5
