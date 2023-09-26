@@ -1,4 +1,5 @@
 require "../spec_helper"
+require "../mocks/travel_plans_mock"
 
 HEADERS = HTTP::Headers{"Content-Type" => "application/json"}
 
@@ -49,6 +50,32 @@ describe "Travel Plans API" do
       response.status_code.should eq 200
       response.body.should eq expected_response
     end
+
+    it "returns travel_plans with it's travel_stops expanded when the expand parameter is passed" do
+      post "/travel_plans", HEADERS, {travel_stops: [1, 2]}.to_json
+      id1 = JSON.parse(response.body)["id"].as_i
+      post "/travel_plans", HEADERS, {travel_stops: [3, 7]}.to_json
+      id2 = JSON.parse(response.body)["id"].as_i
+
+      get "/travel_plans?expand=true"
+
+      expected_response = get_travel_plans_expanded_from_db(id1, id2).to_json
+
+      response.status_code.should eq 200
+      response.body.should eq expected_response
+    end
+
+    it "returns travel_plans with it's travel_stops expanded and optimized when the parameters are true" do
+      post "/travel_plans", HEADERS, {travel_stops: [2, 3, 7]}.to_json
+      id1 = JSON.parse(response.body)["id"].as_i
+
+      get "/travel_plans?expand=true&optimize=true"
+
+      expected_response = get_travel_plans_expanded_and_optimized_from_db(id1).to_json
+
+      response.status_code.should eq 200
+      response.body.should eq expected_response
+    end
   end
 
   describe "GET /travel_plans/:id" do
@@ -68,6 +95,18 @@ describe "Travel Plans API" do
       get "/travel_plans/#{id}"
 
       expected_response = {id: id, travel_stops: [6, 7]}.to_json
+
+      response.status_code.should eq 200
+      response.body.should eq expected_response
+    end
+
+    it "returns a 200 status code and a travel plan with it's travel_stops expanded and optimized when the parameters are passed" do
+      post "/travel_plans", HEADERS, {travel_stops: [2, 3, 7]}.to_json
+      id = JSON.parse(response.body)["id"].as_i
+
+      get "/travel_plans/#{id}?expand=true&optimize=true"
+
+      expected_response = get_travel_plans_expanded_and_optimized_from_db(id)[0].to_json
 
       response.status_code.should eq 200
       response.body.should eq expected_response
