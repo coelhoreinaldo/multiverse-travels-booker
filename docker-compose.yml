@@ -7,8 +7,6 @@ services:
     ports:
       - "3000:3000"
     working_dir: /app-server
-    volumes:
-      - ./server/src:/app-server/src
     depends_on:
       db:
         condition: service_healthy
@@ -16,6 +14,14 @@ services:
       test: [ "CMD", "lsof", "-t", "-i:3000" ]
       timeout: 10s
       retries: 5
+    environment:
+      - DB_HOST=db
+    # Para desenvolvimento, descomentar as três linhas abaixo:
+    # volumes:
+    #   - ./server:/app-server/
+    # command: sh 
+    # tty: true
+    # stdin_open: true 
   db:
     container_name: app_db
     image: mysql:8.0.32
