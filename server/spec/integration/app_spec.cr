@@ -156,4 +156,27 @@ describe "Multiverse Travels Booker API" do
       response.body.should eq ""
     end
   end
+
+  describe "PATCH /travel_plans/:id/append" do
+    it "returns a 404 error message when the travel plan does not exist" do
+      patch "/travel_plans/1/append", HEADERS, {travel_stop: 1}.to_json
+
+      error_message = JSON.parse(response.body)
+
+      response.status_code.should eq 404
+      error_message["message"].should eq "travel_plan with id 1 not found"
+    end
+
+    it "return a 200 status code and updates a travel plan" do
+      post "/travel_plans", HEADERS, {travel_stops: [1, 2]}.to_json
+      id = JSON.parse(response.body)["id"].as_i
+
+      patch "/travel_plans/#{id}/append", HEADERS, {travel_stop: 9}.to_json
+
+      expected_response = {id: id, travel_stops: [1, 2, 9]}.to_json
+
+      response.status_code.should eq 200
+      response.body.should eq expected_response
+    end
+  end
 end
