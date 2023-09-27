@@ -2,6 +2,7 @@ require "kemal"
 require "../config/config"
 require "json"
 require "./utils/travel_stops"
+require "./middleware/validate_travel_plan"
 
 Kemal.config.port = ENV["PORT"].to_i || 3000
 
@@ -58,12 +59,6 @@ module App
     optimize = env.params.query["optimize"]?
 
     travel_plan = TravelPlan.find(id)
-
-    if !travel_plan
-      error = {message: "travel_plan with id #{id} not found"}.to_json
-      halt env, status_code: 404, response: error
-    end
-
     parsed_response = NamedTuple(id: Int32, travel_stops: String).from_json(travel_plan.to_json)
     formatted_response = {
       "id"           => parsed_response["id"],
@@ -83,13 +78,6 @@ module App
       halt env, status_code: 400, response: error
     end
 
-    travel_exists = TravelPlan.find(id)
-
-    if !travel_exists
-      error = {message: "travel_plan with id #{id} not found"}.to_json
-      halt env, status_code: 404, response: error
-    end
-
     stringified_array = travel_stops.to_s
 
     updated_travel_plan = TravelPlan.where { _id == id }.update(travel_stops: stringified_array)
@@ -104,14 +92,7 @@ module App
 
   delete "/travel_plans/:id" do |env|
     id = env.params.url["id"].to_i
-    travel_plan = TravelPlan.find(id)
-
-    if !travel_plan
-      error = {message: "travel_plan with id #{id} not found"}.to_json
-      halt env, status_code: 404, response: error
-    end
-
-    travel_plan.delete
+    TravelPlan.delete(id)
 
     env.response.status_code = 204
   end
@@ -121,11 +102,6 @@ module App
     new_travel_stop = env.params.json["travel_stop"].as(Int64)
 
     travel_exists = TravelPlan.find(id)
-
-    if !travel_exists
-      error = {message: "travel_plan with id #{id} not found"}.to_json
-      halt env, status_code: 404, response: error
-    end
 
     parsed_response = NamedTuple(id: Int32, travel_stops: String).from_json(travel_exists.to_json)
     parsed_travel_stops = Array(Int64).from_json(parsed_response["travel_stops"])
