@@ -7,7 +7,7 @@ module App
     env.response.content_type = "application/json"
   end
 
-  travel_plan_service = TravelPlanService.new
+  TRAVEL_PLAN_SERVICE = TravelPlanService.new
 
   post "/travel_plans" do |env|
     travel_stops = env.params.json["travel_stops"].as(Array)
@@ -17,7 +17,7 @@ module App
       halt env, status_code: 400, response: error
     end
 
-    created_travel_plan = travel_plan_service.create_travel_plan(travel_stops)
+    created_travel_plan = TRAVEL_PLAN_SERVICE.create_travel_plan(travel_stops)
     env.response.status_code = 201
     created_travel_plan.to_json
   end
@@ -26,20 +26,9 @@ module App
     expand = env.params.query["expand"]? == "true"
     optimize = env.params.query["optimize"]? == "true"
 
-    travel_plans = TravelPlan.all
-
-    parsed_response = Array(NamedTuple(id: Int32, travel_stops: String)).from_json(travel_plans.to_json)
-    travel_plans_response = parsed_response.map do |t|
-      parsed_travel_stops = Array(Int64).from_json(t["travel_stops"])
-      t_travel_stops = parsed_travel_stops
-
-      t_travel_stops = get_travel_stops(parsed_travel_stops, expand: expand, optimize: optimize)
-
-      {"id" => t["id"], "travel_stops" => t_travel_stops}
-    end
-
+    travel_plans = TRAVEL_PLAN_SERVICE.get_all_travel_plans(expand: expand, optimize: optimize)
     env.response.status_code = 200
-    travel_plans_response.to_json
+    travel_plans.to_json
   end
 
   get "/travel_plans/:id" do |env|
@@ -47,15 +36,9 @@ module App
     expand = env.params.query["expand"]?
     optimize = env.params.query["optimize"]?
 
-    travel_plan = TravelPlan.find(id)
-    parsed_response = NamedTuple(id: Int32, travel_stops: String).from_json(travel_plan.to_json)
-    formatted_response = {
-      "id"           => parsed_response["id"],
-      "travel_stops" => get_travel_stops(Array(Int64).from_json(parsed_response["travel_stops"]), expand: expand, optimize: optimize),
-    }
-
+    found_travel_plan = TRAVEL_PLAN_SERVICE.get_travel_plan_by_id(id, expand: expand, optimize: optimize)
     env.response.status_code = 200
-    formatted_response.to_json
+    found_travel_plan.to_json
   end
 
   put "/travel_plans/:id" do |env|
