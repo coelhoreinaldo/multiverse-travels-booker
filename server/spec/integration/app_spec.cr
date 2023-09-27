@@ -3,7 +3,7 @@ require "../mocks/travel_plans_mock"
 
 HEADERS = HTTP::Headers{"Content-Type" => "application/json"}
 
-describe "Travel Plans API" do
+describe "Multiverse Travels Booker API" do
   Spec.before_each do
     # Inicia uma transação de banco de dados antes de cada teste
     Jennifer::Adapter.default_adapter.begin_transaction
