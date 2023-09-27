@@ -3,6 +3,14 @@ require "../mocks/travel_plans_mock"
 require "../../src/utils/travel_stops"
 
 describe "Multiverse Travels Booker API" do
+  describe "get_graphql_query" do
+    it "return a graphql query" do
+      query = get_graphql_query([1, 2])
+
+      query.should eq "{\"query\":\"\\n  query {\\n    locationsByIds(ids: [1, 2]){\\n      id\\n      name\\n      dimension\\n      type\\n      residents {\\n        episode {\\n          characters {\\n            id\\n          }\\n        }\\n      }\\n    }\\n  }\\n  \"}"
+    end
+  end
+
   describe "get_travel_stops func" do
     it "return a list of travel stops when params are not provided" do
       travel_stops = get_travel_stops([1, 2])
