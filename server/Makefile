@@ -16,7 +16,8 @@ run_test:
 	APP_ENV=test make sam db:setup && APP_ENV=test PORT=3001 KEMAL_ENV=test crystal spec && APP_ENV=test make sam db:drop
 	
 run_unit_test:
-	PORT=3001 KEMAL_ENV=test crystal spec/units/app_unit_spec.cr
+
+	APP_ENV=test make sam db:setup && APP_ENV=test PORT=3001 KEMAL_ENV=test crystal spec/units/travel_plan_service_spec.cr && PORT=3001 KEMAL_ENV=test crystal spec/units/app_unit_spec.cr && APP_ENV=test make sam db:drop
 
 run_integration_test:
 	APP_ENV=test make sam db:setup && APP_ENV=test PORT=3001 KEMAL_ENV=test crystal spec/integration/app_spec.cr && APP_ENV=test make sam db:drop

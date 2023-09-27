@@ -4,16 +4,6 @@ require "../mocks/travel_plans_mock"
 HEADERS = HTTP::Headers{"Content-Type" => "application/json"}
 
 describe "Multiverse Travels Booker API" do
-  Spec.before_each do
-    # Inicia uma transação de banco de dados antes de cada teste
-    Jennifer::Adapter.default_adapter.begin_transaction
-  end
-
-  Spec.after_each do
-    # Desfaz a transação de banco de dados após cada teste
-    Jennifer::Adapter.default_adapter.rollback_transaction
-  end
-
   describe "POST /travel_plans" do
     it "returns a 201 status code and creates a travel plan" do
       post "/travel_plans", HEADERS, {travel_stops: [1, 2, 3, 4]}.to_json

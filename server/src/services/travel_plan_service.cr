@@ -10,7 +10,7 @@ class TravelPlanService
     return created_travel_response
   end
 
-  def get_all_travel_plans(expand, optimize)
+  def get_all_travel_plans(expand = false, optimize = false)
     travel_plans = TravelPlan.all
 
     parsed_response = Array(NamedTuple(id: Int32, travel_stops: String)).from_json(travel_plans.to_json)
@@ -26,7 +26,7 @@ class TravelPlanService
     return travel_plans_response
   end
 
-  def get_travel_plan_by_id(id, expand, optimize)
+  def get_travel_plan_by_id(id, expand = false, optimize = false)
     travel_plan = TravelPlan.find(id)
 
     parsed_response = NamedTuple(id: Int32, travel_stops: String).from_json(travel_plan.to_json)
