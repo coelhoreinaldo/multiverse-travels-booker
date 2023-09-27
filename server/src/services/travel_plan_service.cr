@@ -37,4 +37,36 @@ class TravelPlanService
 
     return travel_plan_response
   end
+
+  def update_travel_plan(id, travel_stops)
+    stringified_array = travel_stops.to_s
+
+    updated_travel_plan = TravelPlan.where { _id == id }.update(travel_stops: stringified_array)
+
+    updated_travel_response = {
+      id:           id,
+      travel_stops: Array(Int64).from_json(stringified_array),
+    }
+
+    return updated_travel_response
+  end
+
+  def append_travel_stop(id, new_travel_stop)
+    travel_exists = TravelPlan.find(id)
+
+    parsed_response = NamedTuple(id: Int32, travel_stops: String).from_json(travel_exists.to_json)
+    parsed_travel_stops = Array(Int64).from_json(parsed_response["travel_stops"])
+
+    parsed_travel_stops << new_travel_stop
+    stringified_array = parsed_travel_stops.to_s
+
+    updated_travel_plan = TravelPlan.where { _id == id }.update(travel_stops: stringified_array)
+
+    updated_travel_response = {
+      id:           id,
+      travel_stops: Array(Int64).from_json(stringified_array),
+    }
+
+    return updated_travel_response
+  end
 end

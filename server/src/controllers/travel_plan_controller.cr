@@ -50,16 +50,9 @@ module App
       halt env, status_code: 400, response: error
     end
 
-    stringified_array = travel_stops.to_s
-
-    updated_travel_plan = TravelPlan.where { _id == id }.update(travel_stops: stringified_array)
-
-    updated_travel_response = {
-      id:           id,
-      travel_stops: Array(Int64).from_json(stringified_array),
-    }
+    updated_travel = TRAVEL_PLAN_SERVICE.update_travel_plan(id, travel_stops)
     env.response.status_code = 200
-    updated_travel_response.to_json
+    updated_travel.to_json
   end
 
   delete "/travel_plans/:id" do |env|
@@ -73,22 +66,8 @@ module App
     id = env.params.url["id"].to_i
     new_travel_stop = env.params.json["travel_stop"].as(Int64)
 
-    travel_exists = TravelPlan.find(id)
-
-    parsed_response = NamedTuple(id: Int32, travel_stops: String).from_json(travel_exists.to_json)
-    parsed_travel_stops = Array(Int64).from_json(parsed_response["travel_stops"])
-
-    parsed_travel_stops << new_travel_stop
-    stringified_array = parsed_travel_stops.to_s
-
-    updated_travel_plan = TravelPlan.where { _id == id }.update(travel_stops: stringified_array)
-
-    updated_travel_response = {
-      id:           id,
-      travel_stops: Array(Int64).from_json(stringified_array),
-    }
-
+    updated_travel = TRAVEL_PLAN_SERVICE.append_travel_stop(id, new_travel_stop)
     env.response.status_code = 200
-    updated_travel_response.to_json
+    updated_travel.to_json
   end
 end
