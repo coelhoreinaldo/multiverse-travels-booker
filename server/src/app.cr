@@ -8,8 +8,11 @@ Kemal.config.port = ENV["PORT"].to_i || 3000
 module App
   VERSION = "0.1.0"
 
-  post "/travel_plans" do |env|
+  before_all "*" do |env|
     env.response.content_type = "application/json"
+  end
+
+  post "/travel_plans" do |env|
     travel_stops = env.params.json["travel_stops"].as(Array)
 
     if travel_stops.size == 0
@@ -30,7 +33,6 @@ module App
   end
 
   get "/travel_plans" do |env|
-    env.response.content_type = "application/json"
     expand = env.params.query["expand"]? == "true"
     optimize = env.params.query["optimize"]? == "true"
 
@@ -51,7 +53,6 @@ module App
   end
 
   get "/travel_plans/:id" do |env|
-    env.response.content_type = "application/json"
     id = env.params.url["id"].to_i
     expand = env.params.query["expand"]?
     optimize = env.params.query["optimize"]?
@@ -74,7 +75,6 @@ module App
   end
 
   put "/travel_plans/:id" do |env|
-    env.response.content_type = "application/json"
     id = env.params.url["id"].to_i
     travel_stops = env.params.json["travel_stops"].as(Array)
 
@@ -103,7 +103,6 @@ module App
   end
 
   delete "/travel_plans/:id" do |env|
-    env.response.content_type = "application/json"
     id = env.params.url["id"].to_i
     travel_plan = TravelPlan.find(id)
 

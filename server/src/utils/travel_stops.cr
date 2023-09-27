@@ -3,10 +3,10 @@ require "json"
 
 API_URL = "https://rickandmortyapi.com/graphql"
 
-def get_travel_stops(travel_stops, expand = false, optimize = false)
+def get_graphql_query(travel_stops_ids)
   query = "
   query {
-    locationsByIds(ids: #{travel_stops}){
+    locationsByIds(ids: #{travel_stops_ids}){
       id
       name
       dimension
@@ -21,13 +21,18 @@ def get_travel_stops(travel_stops, expand = false, optimize = false)
     }
   }
   "
-
   data = {
     "query" => query,
   }.to_json
+end
+
+def get_travel_stops(travel_stops, expand = false, optimize = false)
+  if !expand && !optimize
+    return travel_stops
+  end
 
   headers = HTTP::Headers{"Content-Type" => "application/json"}
-  api_response = HTTP::Client.post(API_URL, headers: headers, body: data)
+  api_response = HTTP::Client.post(API_URL, headers: headers, body: get_graphql_query(travel_stops))
 
   if api_response.status == HTTP::Status::OK
     parsed_data = JSON.parse(api_response.body)["data"]["locationsByIds"]
@@ -44,11 +49,8 @@ def get_travel_stops(travel_stops, expand = false, optimize = false)
       return travel_stops.map { |stop| {id: stop["id"].to_i, name: stop["name"], dimension: stop["dimension"], type: stop["type"]} }
     end
 
-    if optimize
-      sorted_by_dimension = sorted_by_popularity.sort_by { |stop| stop["dimension"] }
-      return sorted_by_dimension.map { |stop| stop["id"].to_i }
-    end
-    return travel_stops.map { |stop| stop["id"].to_i }
+    sorted_by_dimension = sorted_by_popularity.sort_by { |stop| stop["dimension"] }
+    return sorted_by_dimension.map { |stop| stop["id"].to_i }
   else
     return nil
   end
