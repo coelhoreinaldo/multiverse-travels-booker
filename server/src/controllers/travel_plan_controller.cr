@@ -7,6 +7,8 @@ module App
     env.response.content_type = "application/json"
   end
 
+  travel_plan_service = TravelPlanService.new
+
   post "/travel_plans" do |env|
     travel_stops = env.params.json["travel_stops"].as(Array)
 
@@ -15,16 +17,9 @@ module App
       halt env, status_code: 400, response: error
     end
 
-    stringified_array = travel_stops.to_s
-
-    created_travel_plan = TravelPlan.create({travel_stops: stringified_array})
-
-    created_travel_response = {
-      id:           created_travel_plan.id,
-      travel_stops: Array(Int64).from_json(stringified_array),
-    }
+    created_travel_plan = travel_plan_service.create_travel_plan(travel_stops)
     env.response.status_code = 201
-    created_travel_response.to_json
+    created_travel_plan.to_json
   end
 
   get "/travel_plans" do |env|
