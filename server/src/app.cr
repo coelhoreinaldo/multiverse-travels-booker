@@ -115,6 +115,34 @@ module App
 
     env.response.status_code = 204
   end
+
+  patch "/travel_plans/:id/append" do |env|
+    id = env.params.url["id"].to_i
+    new_travel_stop = env.params.json["travel_stop"].as(Int64)
+
+    travel_exists = TravelPlan.find(id)
+
+    if !travel_exists
+      error = {message: "travel_plan with id #{id} not found"}.to_json
+      halt env, status_code: 404, response: error
+    end
+
+    parsed_response = NamedTuple(id: Int32, travel_stops: String).from_json(travel_exists.to_json)
+    parsed_travel_stops = Array(Int64).from_json(parsed_response["travel_stops"])
+
+    parsed_travel_stops << new_travel_stop
+    stringified_array = parsed_travel_stops.to_s
+
+    updated_travel_plan = TravelPlan.where { _id == id }.update(travel_stops: stringified_array)
+
+    updated_travel_response = {
+      id:           id,
+      travel_stops: Array(Int64).from_json(stringified_array),
+    }
+
+    env.response.status_code = 200
+    updated_travel_response.to_json
+  end
 end
 
 Kemal.run
