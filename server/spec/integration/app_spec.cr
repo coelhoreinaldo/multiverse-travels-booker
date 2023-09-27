@@ -51,7 +51,7 @@ describe "Multiverse Travels Booker API" do
       response.body.should eq expected_response
     end
 
-    it "returns travel_plans with it's travel_stops expanded when the expand parameter is passed" do
+    it "returns travel_plans with their travel_stops expanded when the expand parameter is provided" do
       post "/travel_plans", HEADERS, {travel_stops: [1, 2]}.to_json
       id1 = JSON.parse(response.body)["id"].as_i
       post "/travel_plans", HEADERS, {travel_stops: [3, 7]}.to_json
@@ -65,7 +65,7 @@ describe "Multiverse Travels Booker API" do
       response.body.should eq expected_response
     end
 
-    it "returns travel_plans with it's travel_stops expanded and optimized when the parameters are true" do
+    it "returns travel_plans with their travel_stops expanded and optimized when the parameters are true" do
       post "/travel_plans", HEADERS, {travel_stops: [2, 3, 7]}.to_json
       id1 = JSON.parse(response.body)["id"].as_i
 
@@ -100,7 +100,7 @@ describe "Multiverse Travels Booker API" do
       response.body.should eq expected_response
     end
 
-    it "returns a 200 status code and a travel plan with it's travel_stops expanded and optimized when the parameters are passed" do
+    it "returns a 200 status code and a travel plan with their travel stops expanded and optimized when the parameters are provided" do
       post "/travel_plans", HEADERS, {travel_stops: [2, 3, 7]}.to_json
       id = JSON.parse(response.body)["id"].as_i
 
