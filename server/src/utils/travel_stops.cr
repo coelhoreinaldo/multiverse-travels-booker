@@ -35,16 +35,16 @@ def get_travel_stops(travel_stops, expand = false, optimize = false)
 
     sorted_by_popularity = travel_stops.sort_by { |stop| stop["residents"].map { |resident| resident["episode"].map { |episode| episode["characters"].size }.sum }.sum }
 
-    if optimize == "true" && expand == "true"
+    if optimize && expand
       sorted_by_dimension = sorted_by_popularity.sort_by { |stop| stop["dimension"] }
       return sorted_by_dimension.map { |stop| {id: stop["id"].to_i, name: stop["name"], dimension: stop["dimension"], type: stop["type"]} }
     end
 
-    if expand == "true"
+    if expand
       return travel_stops.map { |stop| {id: stop["id"].to_i, name: stop["name"], dimension: stop["dimension"], type: stop["type"]} }
     end
 
-    if optimize == "true"
+    if optimize
       sorted_by_dimension = sorted_by_popularity.sort_by { |stop| stop["dimension"] }
       return sorted_by_dimension.map { |stop| stop["id"].to_i }
     end
