@@ -17,7 +17,7 @@ services:
     environment:
       - DB_HOST=db
       - PORT=3000
-    # Para desenvolvimento, descomentar as três linhas abaixo:
+    # #"Para desenvolvimento, descomentar as três linhas abaixo":
     # volumes:
     #   - ./server:/app-server/
     # command: sh
