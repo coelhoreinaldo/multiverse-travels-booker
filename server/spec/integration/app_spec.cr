@@ -13,6 +13,22 @@ describe "Multiverse Travels Booker API" do
       response.status_code.should eq 201
       response.body.should eq expected_response
     end
+    it "returns a 400 error message when the travel_stops parameter isnt a list of integers" do
+      post "/travel_plans", HEADERS, {travel_stops: [1, 2, "3", 4]}.to_json
+
+      error_message = JSON.parse(response.body)
+
+      response.status_code.should eq 400
+      error_message["message"].should eq "you must provide a list of integers"
+    end
+    it "returns a 400 error message when the travel_stops parameter is empty" do
+      post "/travel_plans", HEADERS, {travel_stops: [] of Int32}.to_json
+
+      error_message = JSON.parse(response.body)
+
+      response.status_code.should eq 400
+      error_message["message"].should eq "you must provide a list of travel stops"
+    end
   end
 
   describe "GET /travel_plans" do
@@ -114,7 +130,7 @@ describe "Multiverse Travels Booker API" do
     end
 
     it "returns a 200 status code and updates a travel plan" do
-      post "/travel_plans", HEADERS, {travel_stops: [1, 2, 3, 4]}.to_json
+      post "/travel_plans", HEADERS, {travel_stops: [2, 7]}.to_json
       id = JSON.parse(response.body)["id"].as_i
 
       put "/travel_plans/#{id}", HEADERS, {travel_stops: [9, 4]}.to_json
@@ -123,6 +139,27 @@ describe "Multiverse Travels Booker API" do
 
       response.status_code.should eq 200
       response.body.should eq expected_response
+    end
+
+    it "returns a 400 error message when the travel_stops parameter isnt a list of integers" do
+      post "/travel_plans", HEADERS, {travel_stops: [2, 7]}.to_json
+      id = JSON.parse(response.body)["id"].as_i
+      put "/travel_plans/#{id}", HEADERS, {travel_stops: ["3", 4]}.to_json
+
+      error_message = JSON.parse(response.body)
+
+      response.status_code.should eq 400
+      error_message["message"].should eq "you must provide a list of integers"
+    end
+    it "returns a 400 error message when the travel_stops parameter is empty" do
+      post "/travel_plans", HEADERS, {travel_stops: [2, 7]}.to_json
+      id = JSON.parse(response.body)["id"].as_i
+      put "/travel_plans/#{id}", HEADERS, {travel_stops: [] of Int32}.to_json
+
+      error_message = JSON.parse(response.body)
+
+      response.status_code.should eq 400
+      error_message["message"].should eq "you must provide a list of travel stops"
     end
   end
 
@@ -167,6 +204,18 @@ describe "Multiverse Travels Booker API" do
 
       response.status_code.should eq 200
       response.body.should eq expected_response
+    end
+
+    it "return a 400 error when the travel stop parameter is not an integer" do
+      post "/travel_plans", HEADERS, {travel_stops: [1, 2]}.to_json
+      id = JSON.parse(response.body)["id"].as_i
+
+      patch "/travel_plans/#{id}/append", HEADERS, {travel_stop: "9"}.to_json
+
+      error_message = JSON.parse(response.body)
+
+      response.status_code.should eq 400
+      error_message["message"].should eq "you must provide an integer travel stop"
     end
   end
 end
