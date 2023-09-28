@@ -24,4 +24,4 @@ run_integration_test:
 
 # Quando em desenvolvimento, usar o comando abaixo criar o banco de dados e rodar o servidor.
 start:
-	make sam db:setup && crystal src/app.cr
+	shards install && make sam db:setup && crystal src/app.cr
