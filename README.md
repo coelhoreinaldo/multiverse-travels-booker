@@ -1,32 +1,31 @@
 # Multiverse Travels Booker
 
-Multiverse Travels Booker
-This API, built using Crystal with the Kemal framework for HTTP requests and the Jennifer ORM, allows users to create, update, and delete travel plans based on a list of stops. Users can submit a list of stops to the service, which processes the information and generates a travel plan.
+Esta API, construída usando Crystal com o framework Kemal para solicitações HTTP e o ORM Jennifer, permite que os usuários criem, encontrem, atualizem e excluam planos de viagem com base em uma lista de paradas. Os usuários podem enviar uma lista de paradas para o serviço, que processa as informações e gera um plano de viagem.
 
-To access information about each trip, requests are made to the [Rick and Morty API](https://rickandmortyapi.com/). The application also includes automated tests written using Crystal's standard testing library to ensure its correct functionality.
+Para acessar informações sobre cada viagem, são feitas solicitações à [API do Rick and Morty](https://rickandmortyapi.com/). A aplicação também inclui testes automatizados escritos usando a biblioteca de testes padrão do Crystal para garantir sua funcionalidade correta.
 
-## Installation
+## Instalação
 
-1. Run the command ```docker-compose up -d``` to start the database and server.
+1. Execute o comando ```docker-compose up -d``` para iniciar o banco de dados e o servidor.
 
-2. Use a framework of your choice to make requests to the server. For example: [Postman](https://www.postman.com/), [Insomnia](https://insomnia.rest/), Thunder Client (VSCode plugin), etc.
+2. Use um framework de sua escolha para fazer solicitações ao servidor. Por exemplo: [Postman](https://www.postman.com/), [Insomnia](https://insomnia.rest/), Thunder Client (plugin do VSCode), etc.
 
-### Requirements
+### Requisitos
 
 - Docker
-- Tools to make HTTP requests
+- Ferramentas para fazer solicitações HTTP
 
-## Usage
+## Uso
 
-The requests below can be made to the following base URL: `http://localhost:3000`
+As solicitações abaixo podem ser feitas para a seguinte URL base: `http://localhost:3000`
 
 ### Endpoints
 
-#### 1. Creating a new travel plan
+#### 1. Criando um novo plano de viagem
 
 - Endpoint: `POST /travel_plans`
 
-##### Request
+##### Requisição
 
 ```json
 {
@@ -34,7 +33,7 @@ The requests below can be made to the following base URL: `http://localhost:3000
 }
 ```
 
-##### Response
+##### Resposta
 
 ```json
 {
@@ -43,11 +42,11 @@ The requests below can be made to the following base URL: `http://localhost:3000
 }
 ```
 
-#### 2. Listing a travel plan
+#### 2. Listando um plano de viagem
 
 - Endpoint: `GET /travel_plans/:id`
 
-##### Response
+##### Resposta
 
 ```json
 {
@@ -56,11 +55,11 @@ The requests below can be made to the following base URL: `http://localhost:3000
 }
 ```
 
-#### 3. Listing all travel plans
+#### 3. Listando todos os planos de viagem
 
 - Endpoint: `GET /travel_plans`
 
-##### Response
+##### Resposta
 
 ```json
 [
@@ -75,11 +74,11 @@ The requests below can be made to the following base URL: `http://localhost:3000
 ]
 ```
 
-#### 4. Updating a travel plan
+#### 4. Atualizando um plano de viagem
 
 - Endpoint: `PUT /travel_plans/:id`
 
-##### Request
+##### Requisição
 
 ```json
 {
@@ -87,7 +86,7 @@ The requests below can be made to the following base URL: `http://localhost:3000
 }
 ```
 
-##### Response
+##### Resposta
 
 ```json
 {
@@ -96,19 +95,19 @@ The requests below can be made to the following base URL: `http://localhost:3000
 }
 ```
 
-#### 5. Deleting a travel plan
+#### 5. Excluindo um plano de viagem
 
 - Endpoint: `DELETE /travel_plans/:id`
 
-##### Response
+##### Resposta
 
-Empty success response.
+Resposta de sucesso vazia.
 
-#### 6. Appending a stop to a travel plan
+#### 6. Adicionando uma parada a um plano de viagem
 
 - Endpoint: `PATCH /travel_plans/:id/append`
 
-##### Request
+##### Requisição
 
 ```json
 {
@@ -116,7 +115,7 @@ Empty success response.
 }
 ```
 
-##### Response
+##### Resposta
 
 ```json
 {
@@ -125,11 +124,11 @@ Empty success response.
 }
 ```
 
-### Query Parameters
+### Parâmetros Query
 
 #### expand
 
-- Upon receiving this parameter, the API expands the stops for each trip, transforming the travel_stops field from an array of integers representing the IDs of each location into an array of objects in the following format, populated with data from the corresponding location recorded in the [Rick and Morty](https://rickandmortyapi.com/) API under the given ID.
+- Ao receber este parâmetro, a API expande as paradas para cada viagem, transformando o campo travel_stops de uma lista de inteiros representando os IDs de cada local em uma lista de objetos no seguinte formato, preenchidos com dados do local correspondente registrado na [API do Rick and Morty](https://rickandmortyapi.com/) sob o ID fornecido.
 
   ```json
   {
@@ -142,14 +141,21 @@ Empty success response.
 
 #### optimize
 
-When enabled, this parameter optimizes the travel_stops array to minimize interdimensional jumps and arrange travel stops from the least popular to the most popular locations. To achieve this:
+- Quando habilitado, este parâmetro otimiza a matriz travel_stops para minimizar saltos interdimensionais e organizar as paradas de viagem dos locais menos populares para os mais populares. Para conseguir isso:
 
-- The API visits all locations within the same dimension before jumping to another dimension.
-- Within the same dimension, locations are sorted by popularity in ascending order. In case of a tie, they are sorted alphabetically by name.
-- Popularity is determined by counting the number of episodes in which each resident from that location appears.
-- Dimensions are visited based on the average popularity of their locations. In case of a tie in average popularity, dimensions are sorted alphabetically.
+- A API visita todos os locais dentro da mesma dimensão antes de saltar para outra dimensão.
+- Dentro da mesma dimensão, os locais são classificados por popularidade em ordem crescente. Em caso de empate, eles são classificados alfabeticamente por nome.
+- A popularidade é determinada contando o número de episódios em que cada residente desse local aparece.
+- As dimensões são visitadas com base na popularidade média de seus locais. Em caso de empate na popularidade média, as dimensões são classificadas alfabeticamente.
+- O resultado é retornado no campo travel_stops, que permanece uma lista de inteiros ou, quando usado com o parâmetro expand, uma lista de objetos de local expandidos.
 
-The result is returned in the travel_stops field, which remains an array of integers or, when used with the expand parameter, an array of expanded location objects.
+  ```json
+  {
+    "id": 1,
+    "name": "Earth (C-137)",
+    "type": "Planet",
+    "dimension": "Dimension C-137"
+  }
 
 - Endpoint: `GET /travel_plans/1`
 
@@ -173,7 +179,7 @@ The result is returned in the travel_stops field, which remains an array of inte
 
 ```json
 {
-  "id": 2,
+  "id": 1,
   "travel_stops": [
     {
       "id": 2,
@@ -199,71 +205,63 @@ The result is returned in the travel_stops field, which remains an array of inte
 
 ## Development
 
-1. Uncomment the lines in the docker-compose.yml file.
+1. Descomente as linhas no arquivo docker-compose.yml.
 
-2. Run the following command to start the database and the server:
+2. Execute o seguinte comando para iniciar o banco de dados e o servidor:
 
 ```bash
 docker-compose up -d
 ```
 
-3. Enter the server container with this command:
+3. Entre no contêiner do servidor com este comando:
 
 ```bash
 docker exec -it app_server sh
 ```
 
-4. To create the database and run the server, use one of the following commands:
+4. Para criar o banco de dados e executar o servidor, use um dos seguintes comandos:
 
-- Using Makefile:
+- Usando o Makefile:
 
 ```bash
 make run start
 ```
 
-- Or manually:
+- Ou manualmente:
 
 ```bash
 make sam db:setup && crystal src/app.cr
 ```
 
-## Running Tests
+## Rodando os testes
 
-Both integration and unit tests are located in the `spec` directory.
+Tanto os testes de integração quanto os unitários estão localizados no diretório spec.
 
-To run all the tests for the application, use the following command:
+Para executar todos os testes do aplicativo, use o seguinte comando:
 
 ```bash
 make run_tests
-# Set the test environment, define the port as 3001, set up the test database, run the tests, and drop the test database.
+# Defina o ambiente de teste, defina a porta como 3001, configure o banco de dados de teste, execute os testes e exclua o banco de dados de teste.
 # APP_ENV=test make sam db:setup && APP_ENV=test PORT=3001 KEMAL_ENV=test crystal spec && APP_ENV=test make sam db:drop
 ```
 
-For only integration tests, use:
+Para executar apenas os de integração:
 
 ```bash
 make run_integration_tests
-# Set the test environment, define the port as 3001, set up the test database, run integration tests, and drop the test database.
+# Defina o ambiente de teste, defina a porta como 3001, configure o banco de dados de teste, execute os testes de integração e exclua o banco de dados de teste.
 # APP_ENV=test make sam db:setup && APP_ENV=test PORT=3001 KEMAL_ENV=test crystal spec/integration/app_spec.cr && APP_ENV=test make sam db:drop
 
 ```
 
-For only unit tests, use:
+Para executar apenas os unitários:
 
 ```bash
 make run_unit_tests
-# Set the test environment, define the port as 3001, set up the test database, run unit tests, and drop the test database.
+# Defina o ambiente de teste, defina a porta como 3001, configure o banco de dados de teste, execute os testes de unidade e exclua o banco de dados de teste.
 #APP_ENV=test make sam db:setup && APP_ENV=test PORT=3001 KEMAL_ENV=test crystal spec/units/travel_plan_service_spec.cr && PORT=3001 KEMAL_ENV=test crystal spec/units/app_unit_spec.cr && APP_ENV=test make sam db:drop
 ```
 
-## Contributing
+## Autor
 
-1. Fork it (<https://github.com/your-github-user/server/fork>)
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
-
-## Contributors
-
-- [coelhoreinaldo](https://github.com/your-github-user) - creator and maintainer
+- [coelhoreinaldo](https://github.com/your-github-user) - criador e mantenedor
