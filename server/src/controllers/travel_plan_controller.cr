@@ -12,11 +12,6 @@ module App
   post "/travel_plans" do |env|
     travel_stops = env.params.json["travel_stops"].as(Array)
 
-    if travel_stops.size == 0
-      error = {message: "travel_stops was not provided"}.to_json
-      halt env, status_code: 400, response: error
-    end
-
     created_travel_plan = TRAVEL_PLAN_SERVICE.create_travel_plan(travel_stops)
     env.response.status_code = 201
     created_travel_plan.to_json
@@ -44,11 +39,6 @@ module App
   put "/travel_plans/:id" do |env|
     id = env.params.url["id"].to_i
     travel_stops = env.params.json["travel_stops"].as(Array)
-
-    if travel_stops.size == 0
-      error = {message: "travel_stops was not provided"}.to_json
-      halt env, status_code: 400, response: error
-    end
 
     updated_travel = TRAVEL_PLAN_SERVICE.update_travel_plan(id, travel_stops)
     env.response.status_code = 200
