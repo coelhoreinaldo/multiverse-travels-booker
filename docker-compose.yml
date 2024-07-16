@@ -1,6 +1,26 @@
 version: '3'
 
 services:
+  client:
+    container_name: app_client
+    build: ./client
+    ports:
+      - "3001:3001"
+    working_dir: /app-client
+    depends_on:
+      - server
+    healthcheck:
+      test: [ "CMD", "lsof", "-t", "-i:3001" ]
+      timeout: 10s
+      retries: 5
+    environment:
+      - SERVER_HOST=server
+      - PORT=3001
+    #"Para desenvolvimento, descomentar as três linhas abaixo":
+    volumes:
+      - ./client:/app-client/
+    tty: true
+    stdin_open: true
   server:
     container_name: app_server
     build: ./server
@@ -17,12 +37,12 @@ services:
     environment:
       - DB_HOST=db
       - PORT=3000
-    # #"Para desenvolvimento, descomentar as três linhas abaixo":
-    # volumes:
-    #   - ./server:/app-server/
-    # command: sh
-    # tty: true
-    # stdin_open: true
+    #"Para desenvolvimento, descomentar as três linhas abaixo":
+    volumes:
+      - ./server:/app-server/
+    command: sh
+    tty: true
+    stdin_open: true
   db:
     container_name: app_db
     image: mysql:8.0.32
