@@ -1,6 +1,7 @@
 require "kemal"
 require "../config/config"
 require "json"
+require "./middleware/add_cors"
 require "./utils/travel_stops"
 require "./middleware/validate_travel_plan"
 require "./middleware/validate_body"
